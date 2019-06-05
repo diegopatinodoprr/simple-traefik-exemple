@@ -3,9 +3,9 @@ version: '3.3'
 services:
   reverse-proxy:
     image: traefik # The official Traefik docker image
-    command: --api --docker # Enables the web UI and tells Traefik to listen to docker
+    command: --api --docker --docker.domain=docker.localhost --logLevel=DEBUG # Enables the web UI and tells Traefik to listen to docker
     ports:
-      - "83:80"     # The HTTP port
+      - "80:80"     # The HTTP port
       - "8080:8080" # The Web UI (enabled by --api)
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -14,3 +14,11 @@ services:
     image: containous/whoami # A container that exposes an API to show its IP address
     labels:
       - "traefik.frontend.rule=Host:whoami.docker.localhost"
+      - "traefik.backend=whoami.api"
+      - "traefik.frontend.rule=Host:${WEB_HOST:-localhost};PathPrefix:/whoami"
+  nodejs:
+      image: node-web-app
+      labels:
+      - "traefik.frontend.rule=Host:nodejs.docker.localhost"
+      - "traefik.backend=nodejs"
+      - "traefik.frontend.rule=Host:${WEB_HOST:-localhost};PathPrefix:/nodejs"
